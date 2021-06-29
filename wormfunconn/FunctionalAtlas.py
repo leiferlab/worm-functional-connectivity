@@ -143,6 +143,48 @@ class FunctionalAtlas:
             out[i] = wfc.convolution(rf,stimulus,dt,8)
             
         return out
+        
+    def get_scalar_connectivity(self, mode="amplitude", threshold={"amplitude":0.8}):
+        '''Get scalar version of functional connectivity (amplitude, timescales,
+        or other.
+        
+        Parameters
+        ----------
+        mode: str (optional)
+            Type of scalar quantity to extract from functional connectivity.
+            Can be amplitude, timescales. Default: amplitude.
+            
+        threshold: dict (optional)
+            Specify the thresholds, in a dictionary, determining which 
+            connections are significant. Currently only implemented for 
+            amplitude, but other future thresholds could include the timescales.
+            Default: {\"amplitude\":0.8}.
+            
+        Returns
+        -------
+        s_fconn: numpy.ndarray
+            A scalar version of the functional connectivity.
+        '''
+        
+        # Determine which connections are above the threshold.
+        sel_conn = np.ones((self.n_neu,self.n_neu),dtype=np.bool)
+        for key in threshold.keys():
+            th = threshold[key]
+            if key == "amplitude":
+                sel_conn *= np.absolute(self.params[...,0])>th
+        
+        # Based on mode, select the parameters to extract.
+        if mode=="amplitude":
+            s_fconn = self.params[...,0]
+        elif mode=="timescale_1":
+            s_fconn = self.params[...,1]
+        else:
+            s_fconn = np.zeros((self.n_neu,self.n_neu))
+        
+        # Set to zero the entries for all the connections below the threshold.    
+        s_fconn[~sel_conn] = 0.0
+        
+        return s_fconn
     
     @classmethod    
     def get_standard_stimulus(cls,nt,dt=1.,stim_type="rectangular",

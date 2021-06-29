@@ -13,7 +13,7 @@ neu_ids = [l.split("\t")[1][:-1] for l in lines]
 # Generate sample parameters
 n_neu = len(neu_ids)
 params = np.zeros((n_neu,n_neu,3))
-params[...,0] = 1.
+params[...,0] = np.random.normal(0.0,0.3,(n_neu,n_neu))
 params[...,1] = np.arange(n_neu)*0.01+0.1
 params[...,1] *= (np.arange(n_neu)*0.01+0.1)[:,None]
 params[...,2] = np.arange(n_neu)*0.001+0.05
