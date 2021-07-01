@@ -47,7 +47,7 @@ setup(
         _integration,
         _convolution,
     ],
-    install_requires=["numpy"],
+    install_requires=["numpy", "matplotlib"],
     package_data={"wormfunconn": ["aconnectome_ids.txt"]},
     entry_points={
         "console_scripts": [
