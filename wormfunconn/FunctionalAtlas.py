@@ -187,7 +187,7 @@ class FunctionalAtlas:
         return s_fconn
     
     @classmethod    
-    def get_standard_stimulus(cls,nt,dt=1.,stim_type="rectangular",
+    def get_standard_stimulus(cls,nt,t_max=None,dt=None,stim_type="rectangular",
                               *args,**kwargs):
         '''Returns a stimulus from a set of standard stimuli. 
         
@@ -195,8 +195,12 @@ class FunctionalAtlas:
         ----------
         nt: int
             Number of time points.
+        t_max: float (optional)
+            Maximum time. If None, it will be determined from nt and dt. Either
+            t_max or dt must be not None. Default: None.
         dt: float (optional)
-            Time step. Default: 1.0
+            Time step. If None, it will be determined from nt and t_max. 
+            Default: None.
         stim_type: str (optional)
             Type of stimulus. Can be rectangular, . Default: rectangular
             
@@ -205,6 +209,11 @@ class FunctionalAtlas:
         stim: (N,) numpy.ndarray
             Stimulus.
         '''
+        
+        if t_max is None and dt is None:
+            raise ValueError("Either t_max or dt must be not None.")
+        elif dt is None:
+            dt = t_max/nt
         
         if stim_type=="rectangular":
             stim = cls.rectangular(nt,dt,*args,**kwargs)
