@@ -96,6 +96,9 @@ def main():
     parser.add_argument(
         "-v", "--verbose", help="increase output verbosity", action="store_true"
     )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {wfc.__version__}"
+    )
     args = parser.parse_args()
 
     # Setup logging

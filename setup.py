@@ -1,7 +1,25 @@
 #!/usr/bin/env python
 
+import os
 from distutils.command.build_ext import build_ext
 from distutils.core import Extension, setup
+
+
+def read(rel_path: str) -> str:
+    here = os.path.abspath(os.path.dirname(__file__))
+    # intentionally *not* adding an encoding option to open, See:
+    #   https://github.com/pypa/virtualenv/issues/201#issuecomment-3145690
+    with open(os.path.join(here, rel_path)) as fp:
+        return fp.read()
+
+
+def get_version(rel_path: str) -> str:
+    for line in read(rel_path).splitlines():
+        if line.startswith("__version__"):
+            # __version__ = "0.9"
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    raise RuntimeError("Unable to find version string.")
 
 
 class CustomBuildExtCommand(build_ext):
@@ -36,7 +54,7 @@ _convolution = Extension(
 setup(
     cmdclass={"build_ext": CustomBuildExtCommand},
     name="wormfunconn",
-    version="0.1",
+    version=get_version("wormfunconn/__init__.py"),
     description="Functional connectivity atlas for the C. elegans brain",
     author="Francesco Randi",
     author_email="francesco.randi@gmail.com",
