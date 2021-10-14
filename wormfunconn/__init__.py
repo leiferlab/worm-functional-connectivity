@@ -8,3 +8,4 @@ from .integration import integral as integral_py
 from ._convolution import convolution1, convolution
 from .FunctionalAtlas import FunctionalAtlas
 from .resp_fun import exp_conv_2, exp_conv_2b
+from .website_text import website_text

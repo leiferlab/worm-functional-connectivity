@@ -216,12 +216,38 @@ class FunctionalAtlas:
             dt = t_max/nt
         
         if stim_type=="rectangular":
-            stim = cls.rectangular(nt,dt,*args,**kwargs)
+            stim = cls.stim_rectangular(nt,dt,*args,**kwargs)
+        elif stim_type=="sinusoidal":
+            stim = cls.stim_sinusoidal(nt,dt,*args,**kwargs)
+        elif stim_type=="delta":
+            stim = cls.stim_rectangular(nt,dt,duration=dt)
+        elif stim_type =="realistic":
+            stim = cls.stim_realistic(nt,dt,*args,**kwargs)
             
         return stim
+        
+    @staticmethod
+    def get_standard_stim_kwargs(stim_type):
+        if stim_type=="rectangular":
+            kwargs = [{"name": "duration", "type": "float", "default": 1.0,
+                        "label": "Duration (s)"}]
+        elif stim_type=="sinusoidal":
+            kwargs = [{"name": "frequency", "type": "float", "default": 1.0,
+                        "label": "Frequency (Hz)"},
+                       {"name": "phi0", "type": "float", "default": 0.0,
+                        "label": "Phase"}]
+        elif stim_type=="delta":
+            kwargs = []
+        elif stim_type =="realistic":
+            kwargs = [{"name": "tau1", "type": "float", "default": 1.0,
+                        "label": "Timescale 1 (s)"},
+                       {"name": "tau2", "type": "float", "default": 0.8,
+                        "label": "Timescale 2 (s)"}]
+                        
+        return kwargs
    
     @staticmethod    
-    def rectangular(nt,dt,duration=1.):
+    def stim_rectangular(nt,dt,duration=1.):
         '''Rectangular stimulus.'''
         stim = np.zeros(nt)
         i1 = int(duration/dt)
@@ -229,4 +255,21 @@ class FunctionalAtlas:
         
         stim[:i1] = 1.
         return stim
+    
+    @staticmethod
+    def stim_realistic(nt,dt,tau1=1.,tau2=0.8):
+        '''Realistic stimulus, i.e. a convolution of two exponentials.
+        '''
+        t = np.arange(nt)*dt
+        p = 1,1/tau1,1/tau2-1/tau1
+        stim = wfc.exp_conv_2b(t,p)
+
+        return stim
         
+    @staticmethod
+    def stim_sinusoidal(nt,dt,frequency=1.,phi0=0.):
+        '''Sinusoidal stimulus.'''
+        t = np.arange(nt)*dt
+        stim = np.sin(2.*np.pi*frequency*t+phi0)
+        
+        return stim

@@ -2,7 +2,7 @@ import numpy as np
 
 def exp_conv_2(t,p):
     '''Convolution from 0 to t of e^-t/tau1 and e^-t/tau2.'''
-    A, tau1, tau2
+    A, tau1, tau2 = p
     
     y = A * tau1*tau2/(tau1-tau2) * (np.exp(-t/tau1) - np.exp(-t/tau2))
 
