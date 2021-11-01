@@ -29,9 +29,13 @@ def use_mock_atlas_scalar(
     funatlas = wfc.FunctionalAtlas.from_file(folder, "mock")
 
     # Get scalar version of functional connectivity
-    s_fconn = funatlas.get_scalar_connectivity(
-        mode=mode, threshold={"amplitude": amplitude_threshold}
+    s_fconn, ann = funatlas.get_scalar_connectivity(
+        mode=mode, threshold={"amplitude": amplitude_threshold},
+        return_all = True
     )
+    
+    # Convert s_fconn and ann to a table-like list of dictionaries.
+    entries = funatlas.convert_s_fconn_to_table(s_fconn, ann)
 
     if show_plot:
         # Plot

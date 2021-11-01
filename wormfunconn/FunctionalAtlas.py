@@ -144,7 +144,8 @@ class FunctionalAtlas:
             
         return out
         
-    def get_scalar_connectivity(self, mode="amplitude", threshold={"amplitude":0.8}):
+    def get_scalar_connectivity(self, mode="amplitude", 
+        threshold={"amplitude":0.8}, return_all = True):
         '''Get scalar version of functional connectivity (amplitude, timescales,
         or other.
         
@@ -164,6 +165,9 @@ class FunctionalAtlas:
         -------
         s_fconn: numpy.ndarray
             A scalar version of the functional connectivity.
+        ann: numpy.ndarray of object
+            Annotations for the connections (functionally stable, functionally
+            multistable, functionally variable). Empty for non-connected edges.
         '''
         
         # Determine which connections are above the threshold.
@@ -184,8 +188,65 @@ class FunctionalAtlas:
         # Set to zero the entries for all the connections below the threshold.    
         s_fconn[~sel_conn] = 0.0
         
-        return s_fconn
+        # Get the annotation of the edges (functionally stable, functionally
+        # multistable, functionally variable). For now, use some random 
+        # assignment.
+        ann = np.empty((self.n_neu,self.n_neu),dtype=object)
+        for i in np.arange(self.n_neu):
+            for j in np.arange(self.n_neu):
+                if sel_conn[i,j]:
+                    if i%2==0:
+                        ann[i,j] = "functionally variable"
+                    else:
+                        ann[i,j] = "functionally stable"
+                else:
+                    ann[i,j] = ""
+        
+        if return_all:
+            return s_fconn, ann
+        else:
+            return s_fconn
     
+    def convert_s_fconn_to_table(self,s_fconn,ann,ds_type="head"):
+        '''Converts the output of FunctionalAtlas.get_scalar_connectivity()
+        to a table-like list of dictionaries with keys from, to, strength,
+        ds_type, annotation.
+        
+        Parameters
+        ----------
+        s_fconn: numpy.ndarray
+            Static functional connectivity matrix returned by 
+            FunctionalAtlas.get_scalar_connectivity()
+        ann: numpy.ndarray
+            Annotations of the connections.
+        ds_type: str (optional)
+            Type of dataset. Default: head.
+            
+        Returns
+        -------
+        entries: list of dictionaries
+            List of dictionaries with keys from, to, strength, ds_type, 
+            annotation. Entries are present only for the connections that have
+            strength different from zero. A threshold can be set in 
+            FunctionalAtlas.get_scalar_connectivity() when getting s_fconn and
+            ann.
+        '''
+        
+        entries = []
+        for i in np.arange(self.n_neu):
+            for j in np.arange(self.n_neu):
+                if s_fconn[i,j]!=0:
+                    to_id = self.neu_ids[i]
+                    from_id = self.neu_ids[j]
+                    entry = {"from": from_id,
+                             "to": to_id,
+                             "strength": s_fconn[i,j],
+                             "ds_type": ds_type,
+                             "annotation": ann[i,j]}
+                    entries.append(entry)
+                    
+        return entries
+        
     @classmethod    
     def get_standard_stimulus(cls,nt,t_max=None,dt=None,stim_type="rectangular",
                               *args,**kwargs):
