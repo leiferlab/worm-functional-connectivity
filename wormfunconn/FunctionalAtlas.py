@@ -291,19 +291,19 @@ class FunctionalAtlas:
     def get_standard_stim_kwargs(stim_type):
         if stim_type=="rectangular":
             kwargs = [{"name": "duration", "type": "float", "default": 1.0,
-                        "label": "Duration (s)"}]
+                        "label": "Duration (s)", "range": [0.,None]}]
         elif stim_type=="sinusoidal":
             kwargs = [{"name": "frequency", "type": "float", "default": 1.0,
-                        "label": "Frequency (Hz)"},
+                        "label": "Frequency (Hz)", "range": [0.,0.25]},
                        {"name": "phi0", "type": "float", "default": 0.0,
-                        "label": "Phase"}]
+                        "label": "Phase", "range": [0.,6.28]}]
         elif stim_type=="delta":
             kwargs = []
         elif stim_type =="realistic":
             kwargs = [{"name": "tau1", "type": "float", "default": 1.0,
-                        "label": "Timescale 1 (s)"},
+                        "label": "Timescale 1 (s)", "range": [0.5,100]},
                        {"name": "tau2", "type": "float", "default": 0.8,
-                        "label": "Timescale 2 (s)"}]
+                        "label": "Timescale 2 (s)", "range": [0.5,100]}]
                         
         return kwargs
    
