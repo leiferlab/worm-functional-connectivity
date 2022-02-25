@@ -80,7 +80,7 @@ class FunctionalAtlas:
         pickle_file.close()
         
     def get_responses(self, stimulus, dt, stim_neu_id, resp_neu_ids=None,
-                      threshold=0.0):
+                      threshold=0.0, top_n=None):
         '''Compute neural responses given a stimulus.
        
         Parameters
@@ -96,6 +96,9 @@ class FunctionalAtlas:
             all the responses above a threshold are returned. Default: None.
         threshold: float
             Some kind of threshold.
+        top_n: int (optional)
+            If not None, the function will return the top_n responses with the
+            largest absolute peak amplitude.
            
         Returns
         -------
@@ -112,9 +115,13 @@ class FunctionalAtlas:
         else: return None
         
         if resp_neu_ids is None:
-            # Temporarily use the first N=threshold neurons in the list
-            threshold = int(threshold)
-            resp_neu_ids = self.neu_ids[:threshold]
+            # Return either:
+            # 1) The top_n absolute-peak-amplitude responses, if top_n is not 
+            #    None.
+            # 2) The responses that pass the threshold, if top_n is None.
+            # In both cases compute the responses for all the neurons and 
+            # select them before returning.
+            resp_neu_ids = self.neu_ids
         else:   
             # If a single ID was passed, make it a list
             try: len(resp_neu_ids)
@@ -136,11 +143,25 @@ class FunctionalAtlas:
             if len(rn_i)>0: rn_i = rn_i[0]
             else: out[i] = np.nan
                 
-            # Compute mock response function
-            rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
+            if self.params[rn_i,sn_i] is not None:
+                # If there are parameters for this connection,
+                # compute mock response function
+                rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
+                
+                # Convolve with stimulus
+                out[i] = wfc.convolution(rf,stimulus,dt,8)
+            else:
+                # If we don't have any data for this connection, return nans.
+                out[i] = np.nan
             
-            # Convolve with stimulus
-            out[i] = wfc.convolution(rf,stimulus,dt,8)
+        if resp_neu_ids is None and top_n is not None:
+            # Select the top_n responses in terms of max(abs())
+            outsort = np.argsort(np.max(np.abs(out),axis=-1))
+            out = out[outsort[-top_n:]]
+        elif resp_neu_ids is None and top_n is None:
+            # Select the responses that pass the threshold.
+            outselect = np.where(np.max(np.abs(out),axis=-1)>=threshold)[0]
+            out = out[outselect]
             
         return out
         
@@ -322,8 +343,11 @@ class FunctionalAtlas:
         '''Realistic stimulus, i.e. a convolution of two exponentials.
         '''
         t = np.arange(nt)*dt
-        p = 1,1/tau1,1/tau2-1/tau1
-        stim = wfc.exp_conv_2b(t,p)
+        ec = wfc.ExponentialConvolution([1./tau1,1./tau2])
+        stim = ec.eval(t)
+        
+        #p = 1,1/tau1,1/tau2-1/tau1
+        #stim = wfc.exp_conv_2b(t,p)
 
         return stim
         
@@ -334,3 +358,28 @@ class FunctionalAtlas:
         stim = np.sin(2.*np.pi*frequency*t+phi0)
         
         return stim
+        
+    @staticmethod
+    def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,resp_neu_ids):
+        sn = "import numpy as np, matplotlib.pyplot as plt, os\n"+\
+             "import wormfunconn as wfc\n"+\
+             "\n"+\
+             "# Get atlas folder\n"+\
+             "folder = os.path.join(os.path.dirname(__file__),\"../atlas/\")\n"+\
+             "\n"+\
+             "# Create FunctionalAtlas instance from file\n"+\
+             "funatlas = wfc.FunctionalAtlas.from_file(folder,\"mock\")\n"+\
+             "\n"+\
+             "stim = funatlas.get_standard_stimulus(nt,dt,stim_type="+stim_type+","+\
+             ','.join('{0}={1!r}'.format(k,v) for k,v in stim_kwargs.items())+")\n"+\
+             "\n"+\
+             "stim_neu_id = \""+stim_neu_id+"\"\n"+\
+             "resp_neu_ids = \""+str(resp_neu_ids)+"\"\n"+\
+             "resp = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids)\n"+\
+             "\n"+\
+             "plt.plot(resp.T)\n"+\
+             "plt.show()"
+             
+        return sn
+             
+
