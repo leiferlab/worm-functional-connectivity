@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import root as root
 from scipy.optimize import root_scalar as root_scalar
-import pumpprobe as pp
+import wormfunconn as wfc
 
 class ExponentialConvolution:
     
@@ -739,7 +739,7 @@ class ExponentialConvolution:
         a = self.eval(time)
         b = gamma*np.exp(-gamma*time)
         if np.all(b[1:]<gamma*1e-2): return -10.
-        ap = pp.convolution(a, b, time[1]-time[0], 8)
+        ap = wfc.convolution(a, b, time[1]-time[0], 8)
         err = np.average(np.abs(ap-a))
         
         return err-gamma*atol
