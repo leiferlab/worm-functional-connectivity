@@ -13,14 +13,18 @@ funatlas = wfc.FunctionalAtlas.from_file(folder,"mock")
 nt = 1000 # Number of time points 
 dt = 0.1 # Time step
 stim_type="rectangular" # Type of standard stimulus
-dur = 2. # Duration of the stimulus
-stim = funatlas.get_standard_stimulus(nt,dt,stim_type=stim_type,duration=dur)
+dur = 1. # Duration of the stimulus
+stim = funatlas.get_standard_stimulus(nt,dt=dt,stim_type=stim_type,duration=dur)
 
 # Get the responses
 stim_neu_id = "AVAL"
-resp_neu_ids = ["AVAR","ASEL","AWAL"]
-resp = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids)
+resp_neu_ids = ["AVAL","AVAR","ASEL","AWAL","wrong_id"]
+resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids)
 
+print(msg)
 # Plot
-plt.plot(resp.T)
+time = np.arange(nt)*dt
+for i in np.arange(resp.shape[0]):
+    plt.plot(time,resp[i],label=labels[i])
+plt.legend()
 plt.show()

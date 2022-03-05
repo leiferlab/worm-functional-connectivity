@@ -80,7 +80,7 @@ class FunctionalAtlas:
         pickle_file.close()
         
     def get_responses(self, stimulus, dt, stim_neu_id, resp_neu_ids=None,
-                      threshold=0.0, top_n=None):
+                      threshold=0.0, top_n=None, sort_by_amplitude=True):
         '''Compute neural responses given a stimulus.
        
         Parameters
@@ -99,15 +99,22 @@ class FunctionalAtlas:
         top_n: int (optional)
             If not None, the function will return the top_n responses with the
             largest absolute peak amplitude.
+        sort_by_amplitude: bool (optional)
+            Whether to sort the output curves by amplitude. Default: True.
            
         Returns
         -------
         responses: (N, M) numpy.ndarray
             Responses of the N responding neurons, for M timesteps (same length
             as the input stimulus).
-        out_neu_ids: list of str
+        labels: list of str
             IDs of the responding neurons.
+        msg: str
+            Message containing comments to output.
         '''
+        
+        # Initialize the output message
+        msg = ""
         
         # Find index of stimulated neuron from its ID
         sn_i = np.where(self.neu_ids==stim_neu_id)[0]
@@ -124,8 +131,12 @@ class FunctionalAtlas:
             resp_neu_ids = self.neu_ids
         else:   
             # If a single ID was passed, make it a list
-            try: len(resp_neu_ids)
-            except: resp_neu_ids = [resp_neu_ids]
+            try: 
+                len(resp_neu_ids)
+                was_scalar = False
+            except: 
+                resp_neu_ids = [resp_neu_ids]
+                was_scalar = True
             
         # Make array of times
         n_t = len(stimulus)
@@ -133,37 +144,92 @@ class FunctionalAtlas:
             
         # Initialize output array
         n_resp = len(resp_neu_ids)
-        out = np.zeros((n_resp,n_t))
+        # Keep out a list instead of initializing an array so that you can
+        # leave out neurons for which we don't have data, instead of returning
+        # nans, which mess with the sorting.
+        out = [] #np.zeros((n_resp,n_t))
          
         # Compute output
+        no_data_for = [] # Keep track of neurons that are not in the dataset.
+        labels = [] # As you go through them, make the list of IDs. 
         for i in np.arange(n_resp):
             rn_id = resp_neu_ids[i]
             # Find responding neuron's index from ID
             rn_i = np.where(self.neu_ids==rn_id)[0]
-            if len(rn_i)>0: rn_i = rn_i[0]
-            else: out[i] = np.nan
-                
-            if self.params[rn_i,sn_i] is not None:
-                # If there are parameters for this connection,
-                # compute mock response function
-                rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
-                
-                # Convolve with stimulus
-                out[i] = wfc.convolution(rf,stimulus,dt,8)
-            else:
-                # If we don't have any data for this connection, return nans.
-                out[i] = np.nan
+            if len(rn_i)>0: 
+                # The ID was found.
+                rn_i = rn_i[0]
+                labels.append(self.neu_ids[rn_i])
             
+                if rn_i == sn_i:
+                    # If the activity of the stimulated neuron is requested,
+                    # return the stimulus.
+                    out.append(stimulus)
+                    msg += "The activity of the stimulated neuron ("+\
+                           stim_neu_id+") is the "+\
+                           "activity set as stimulus. "
+                elif self.params[rn_i,sn_i] is not None:
+                    # If there are parameters for this connection,
+                    # compute mock response function
+                    rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
+                    
+                    # Convolve with stimulus
+                    out.append(wfc.convolution(rf,stimulus,dt,8))
+                else:
+                    # If we don't have data for this connection, don't pass
+                    # anything. Passing nans messes with the sorting.
+                    no_data_for.append(i)
+                    labels.pop(-1)
+                    #out[i] = np.nan
+                
+            else:
+                # The ID was not found. Don't pass anything. Passing nans
+                # messes with the sorting.
+                #labels.append("")
+                msg += "'"+rn_id+"' is not a neuron. "
+        
+        out = np.array(out)        
+        labels = np.array(labels)
+        
+        # Compile a message listing the neurons for which there is no data.
+        if len(no_data_for)>0:
+            msg += "These neurons are not in the dataset: "
+            for ndf in no_data_for:
+                msg += self.neu_ids[i]+","
+            # Replace the last comma with period.
+            msg = msg[:-1]
+            msg += ". "
+        
+        # If either top_n or the threshold must be used, select from the array
+        # of all the responses that was created above.
         if resp_neu_ids is None and top_n is not None:
             # Select the top_n responses in terms of max(abs())
-            outsort = np.argsort(np.max(np.abs(out),axis=-1))
-            out = out[outsort[-top_n:]]
+            outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
+            out = out[outsort[:top_n+1]]
+            labels = labels[outsort[:top_n+1]]
         elif resp_neu_ids is None and top_n is None:
             # Select the responses that pass the threshold.
             outselect = np.where(np.max(np.abs(out),axis=-1)>=threshold)[0]
             out = out[outselect]
+            labels = labels[outselect]
             
-        return out
+        # Sort the responses by amplitude. Not strictly needed if top_n is 
+        # not None (because out has been sorted above), but whatever.
+        if sort_by_amplitude:
+            outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
+            out = out[outsort]
+            labels = labels[outsort]
+            
+            # Also add a (i) to the labels, indicating the rank of that
+            # response.
+            # Make a new list to automatically redefine the <Un dtype.
+            labels_new = [] 
+            for p in np.arange(len(labels)):
+                labels_new.append(labels[p]+" ("+str(p)+")")
+            
+            labels = np.array(labels_new)
+            
+        return out, labels, msg
         
     def get_scalar_connectivity(self, mode="amplitude", 
         threshold={"amplitude":0.8}, return_all = True):
