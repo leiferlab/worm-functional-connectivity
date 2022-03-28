@@ -232,7 +232,7 @@ class FunctionalAtlas:
         return out, labels, msg
         
     def get_scalar_connectivity(self, mode="amplitude", 
-        threshold={"amplitude":0.8}, return_all = True):
+        threshold={"amplitude":0.1}, return_all = True, dtype=int):
         '''Get scalar version of functional connectivity (amplitude, timescales,
         or other.
         
@@ -248,6 +248,10 @@ class FunctionalAtlas:
             amplitude, but other future thresholds could include the timescales.
             Default: {\"amplitude\":0.8}.
             
+        dtype: dtype (optional)
+            If int, the connectivity is multiplied by 100 and returned as an
+            integer.
+            
         Returns
         -------
         s_fconn: numpy.ndarray
@@ -255,6 +259,19 @@ class FunctionalAtlas:
         ann: numpy.ndarray of object
             Annotations for the connections (functionally stable, functionally
             multistable, functionally variable). Empty for non-connected edges.
+        '''
+        
+        folder = os.path.join(os.path.dirname(__file__), "../atlas/")
+        i_map = np.loadtxt(folder+"funatlas_intensity_map.txt")
+        
+        i_map[np.isnan(i_map)] = 0
+        
+        i_map[np.abs(i_map)<threshold["amplitude"]] = 0
+        if dtype==int:
+            s_fconn = (i_map*100).astype(np.int32)
+        else:
+            s_fcon = i_map
+        
         '''
         
         # Determine which connections are above the threshold.
@@ -274,12 +291,13 @@ class FunctionalAtlas:
         
         # Set to zero the entries for all the connections below the threshold.    
         s_fconn[~sel_conn] = 0.0
-        
+        '''
         # Get the annotation of the edges (functionally stable, functionally
         # multistable, functionally variable). For now, use some random 
         # assignment.
         ann = np.empty((self.n_neu,self.n_neu),dtype=object)
-        for i in np.arange(self.n_neu):
+        ann[:] = ""
+        '''for i in np.arange(self.n_neu):
             for j in np.arange(self.n_neu):
                 if sel_conn[i,j]:
                     if i%2==0:
@@ -288,7 +306,7 @@ class FunctionalAtlas:
                         ann[i,j] = "functionally stable"
                 else:
                     ann[i,j] = ""
-        
+        '''
         if return_all:
             return s_fconn, ann
         else:

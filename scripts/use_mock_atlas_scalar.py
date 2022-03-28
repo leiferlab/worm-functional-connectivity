@@ -13,7 +13,7 @@ import wormfunconn as wfc
 
 def use_mock_atlas_scalar(
     mode="amplitude",
-    amplitude_threshold=1.2,
+    amplitude_threshold=10,
     show_plot=False,
     matrix_output=None,
     pairwise_output=None,
