@@ -265,6 +265,7 @@ class FunctionalAtlas:
         i_map = np.loadtxt(folder+"funatlas_intensity_map.txt")
         
         i_map[np.isnan(i_map)] = 0
+        i_map[np.isinf(i_map)] = 0
         
         i_map[np.abs(i_map)<threshold["amplitude"]] = 0
         if dtype==int:
