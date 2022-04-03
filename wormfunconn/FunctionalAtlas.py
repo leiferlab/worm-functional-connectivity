@@ -129,7 +129,9 @@ class FunctionalAtlas:
             # In both cases compute the responses for all the neurons and 
             # select them before returning.
             resp_neu_ids = self.neu_ids
+            resp_neu_ids_was_None = True
         else:   
+            resp_neu_ids_was_None = False
             # If a single ID was passed, make it a list
             try: 
                 len(resp_neu_ids)
@@ -202,12 +204,12 @@ class FunctionalAtlas:
         
         # If either top_n or the threshold must be used, select from the array
         # of all the responses that was created above.
-        if resp_neu_ids is None and top_n is not None:
+        if resp_neu_ids_was_None and top_n is not None:
             # Select the top_n responses in terms of max(abs())
             outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
             out = out[outsort[:top_n+1]]
             labels = labels[outsort[:top_n+1]]
-        elif resp_neu_ids is None and top_n is None:
+        elif resp_neu_ids_was_None and top_n is None:
             # Select the responses that pass the threshold.
             outselect = np.where(np.max(np.abs(out),axis=-1)>=threshold)[0]
             out = out[outselect]
@@ -399,7 +401,7 @@ class FunctionalAtlas:
             kwargs = [{"name": "duration", "type": "float", "default": 1.0,
                         "label": "Duration (s)", "range": [0.,None]}]
         elif stim_type=="sinusoidal":
-            kwargs = [{"name": "frequency", "type": "float", "default": 1.0,
+            kwargs = [{"name": "frequency", "type": "float", "default": 0.25,
                         "label": "Frequency (Hz)", "range": [0.,0.25]},
                        {"name": "phi0", "type": "float", "default": 0.0,
                         "label": "Phase", "range": [0.,6.28]}]
@@ -407,9 +409,9 @@ class FunctionalAtlas:
             kwargs = []
         elif stim_type =="realistic":
             kwargs = [{"name": "tau1", "type": "float", "default": 1.0,
-                        "label": "Timescale 1 (s)", "range": [0.5,100]},
+                        "label": "Timescale 1 (s)", "range": [0.5,100.]},
                        {"name": "tau2", "type": "float", "default": 0.8,
-                        "label": "Timescale 2 (s)", "range": [0.5,100]}]
+                        "label": "Timescale 2 (s)", "range": [0.5,100.]}]
                         
         return kwargs
    
@@ -445,7 +447,13 @@ class FunctionalAtlas:
         return stim
         
     @staticmethod
-    def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,resp_neu_ids):
+    def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,resp_neu_ids,
+                         top_n=top_n,threshold=threshold):
+                         
+        if len(resp_neu_ids)==0: resp_neu_ids = None
+        
+        if top_n=="None": top_n = None
+        
         sn = "import numpy as np, matplotlib.pyplot as plt, os\n"+\
              "import wormfunconn as wfc\n"+\
              "\n"+\
@@ -455,14 +463,26 @@ class FunctionalAtlas:
              "# Create FunctionalAtlas instance from file\n"+\
              "funatlas = wfc.FunctionalAtlas.from_file(folder,\"mock\")\n"+\
              "\n"+\
-             "stim = funatlas.get_standard_stimulus(nt,dt,stim_type="+stim_type+","+\
+             "# Set time-axis properties\n"+\
+             "nt = 1000\n"+\
+             "t_max = 100.0\n"+\
+             "dt = t_max / nt\n"+\
+             "\n"+\
+             "stim = funatlas.get_standard_stimulus(nt,dt=dt,stim_type=\""+stim_type+"\","+\
              ','.join('{0}={1!r}'.format(k,v) for k,v in stim_kwargs.items())+")\n"+\
              "\n"+\
              "stim_neu_id = \""+stim_neu_id+"\"\n"+\
-             "resp_neu_ids = \""+str(resp_neu_ids)+"\"\n"+\
-             "resp = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids)\n"+\
+             "resp_neu_ids = "+str(resp_neu_ids)+"\n"+\
+             "top_n = "+str(top_n)+"\n"+\
+             "threshold = "+str(threshold)+"\n"+\
+             "resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids, top_n=top_n, threshold=threshold)\n"+\
              "\n"+\
-             "plt.plot(resp.T)\n"+\
+             "print(msg)\n"+\
+             "\n"+\
+             "time = np.arange(nt)*dt\n"+
+             "for i in np.arange(resp.shape[0]):\n"+\
+             "\tplt.plot(time,resp[i],label=labels[i])\n"+\
+             "plt.legend()\n"
              "plt.show()"
              
         return sn

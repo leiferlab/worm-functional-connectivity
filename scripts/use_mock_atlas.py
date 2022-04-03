@@ -19,7 +19,7 @@ stim = funatlas.get_standard_stimulus(nt,dt=dt,stim_type=stim_type,duration=dur)
 # Get the responses
 stim_neu_id = "AVAL"
 resp_neu_ids = ["AVAL","AVAR","ASEL","AWAL","wrong_id"]
-resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids)
+resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=None,top_n=5)
 
 print(msg)
 # Plot
