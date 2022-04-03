@@ -88,6 +88,18 @@ class FunctionalAtlas:
             return self.strain
         except:
             return "wild type"
+            
+    def get_neuron_ids(self):
+        try:
+            return self.neuron_ids
+        except:
+            folder = os.path.dirname(__file__)
+            f = open(folder+"/aconnectome_ids.txt","r")
+            ids = []
+            for l in f.readlines():
+                ids.append(l.split("\t")[1][:-1])
+                
+        return ids
         
     def get_responses(self, stimulus, dt, stim_neu_id, resp_neu_ids=None,
                       threshold=0.0, top_n=None, sort_by_amplitude=True):
@@ -149,7 +161,7 @@ class FunctionalAtlas:
             except: 
                 resp_neu_ids = [resp_neu_ids]
                 was_scalar = True
-            
+                
         # Make array of times
         n_t = len(stimulus)
         t = np.arange(n_t)*dt
@@ -164,6 +176,8 @@ class FunctionalAtlas:
         # Compute output
         no_data_for = [] # Keep track of neurons that are not in the dataset.
         labels = [] # As you go through them, make the list of IDs. 
+        confidences = []
+        msg_stim_neuron_included = False
         for i in np.arange(n_resp):
             rn_id = resp_neu_ids[i]
             # Find responding neuron's index from ID
@@ -171,15 +185,27 @@ class FunctionalAtlas:
             if len(rn_i)>0: 
                 # The ID was found.
                 rn_i = rn_i[0]
+                
+                # CONTINUE IF IT'S THE STIMULATED NEURON. YOU'LL INSERT IT
+                # AT THE END IN THE FIRST POSITION, AFTER ALL THE FILTERING AND
+                # RANKING
+                if rn_i == sn_i: continue
+                
                 labels.append(self.neu_ids[rn_i])
+                confidences.append(self.get_confidences(sn_i,rn_i))
             
                 if rn_i == sn_i:
+                    # THIS IS NOW BYPASSED, SO THAT I CAN ALWAYS ADD THE 
+                    # ACTIVITY OF THE STIMULATED NEURON AT THE END, IN FIRST 
+                    # POSITION. LEAVING THIS PIECE OF CODE HERE UNTIL THE
+                    # NEW VERSION IS TESTED
                     # If the activity of the stimulated neuron is requested,
                     # return the stimulus.
                     out.append(stimulus)
                     msg += "The activity of the stimulated neuron ("+\
                            stim_neu_id+") is the "+\
                            "activity set as stimulus. "
+                    msg_stim_neuron_included = True
                 elif self.params[rn_i,sn_i] is not None:
                     # If there are parameters for this connection,
                     # compute mock response function
@@ -202,6 +228,7 @@ class FunctionalAtlas:
         
         out = np.array(out)        
         labels = np.array(labels)
+        confidences = np.array(confidences)
         
         # Compile a message listing the neurons for which there is no data.
         if len(no_data_for)>0:
@@ -219,11 +246,15 @@ class FunctionalAtlas:
             outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
             out = out[outsort[:top_n+1]]
             labels = labels[outsort[:top_n+1]]
+            confidences = confidences[outsort[:top_n+1]]
         elif resp_neu_ids_was_None and top_n is None:
             # Select the responses that pass the threshold.
             outselect = np.where(np.max(np.abs(out),axis=-1)>=threshold)[0]
             out = out[outselect]
             labels = labels[outselect]
+            confidences = confidences[outselect]
+            
+        labels_plain = labels.copy()
             
         # Sort the responses by amplitude. Not strictly needed if top_n is 
         # not None (because out has been sorted above), but whatever.
@@ -231,6 +262,7 @@ class FunctionalAtlas:
             outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
             out = out[outsort]
             labels = labels[outsort]
+            confidences = confidences[outsort]
             
             # Also add a (i) to the labels, indicating the rank of that
             # response.
@@ -239,15 +271,27 @@ class FunctionalAtlas:
             for p in np.arange(len(labels)):
                 labels_new.append(labels[p]+" ("+str(p)+")")
             
+            labels_plain = labels.copy()
             labels = np.array(labels_new)
             
-        confidences = self.get_confidences(stim_neu_id,resp_neu_ids)
-        
+        # Force-include the stimulated neuron in the neuron of which to display
+        # the responses, so that the stimulus is always visible.
+        # Also, make it the first of the list.
+        if stim_neu_id not in labels_plain:
+            if not msg_stim_neuron_included:
+                msg += "The activity of the stimulated neuron ("+\
+                               stim_neu_id+") is the "+\
+                               "activity set as stimulus. "
+            
+            out = np.insert(out,0,stimulus,axis=0)
+            labels = np.insert(labels,0,stim_neu_id)
+            confidences = np.insert(confidences,0,self.get_confidences(sn_i,sn_i))
+            
         return out, labels, confidences, msg
         
-    def get_confidences(self,stim_neu_id,resp_neu_ids):
+    def get_confidences(self,sn_i,rn_i):
         # Temporary, for mock dataset
-        return np.ones(len(resp_neu_ids),dtype=float)
+        return 1.0
         
     def get_scalar_connectivity(self, mode="amplitude", 
         threshold={"amplitude":0.1}, return_all = True, dtype=int):

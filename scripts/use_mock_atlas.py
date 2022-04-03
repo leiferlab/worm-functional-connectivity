@@ -9,7 +9,12 @@ folder = os.path.join(os.path.dirname(__file__),"../atlas/")
 # Create FunctionalAtlas instance from file
 funatlas = wfc.FunctionalAtlas.from_file(folder,"mock")
 
+#print(funatlas.get_neuron_ids())
+
+print("Available strains", wfc.strains)
+
 strain = funatlas.get_strain()
+print(strain)
 
 # Generate the stimulus array
 nt = 1000 # Number of time points 
@@ -20,8 +25,8 @@ stim = funatlas.get_standard_stimulus(nt,dt=dt,stim_type=stim_type,duration=dur)
 
 # Get the responses
 stim_neu_id = "AVAL"
-resp_neu_ids = ["AVAL","AVAR","ASEL","AWAL","wrong_id"]
-resp, labels, confidences, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=None,top_n=5)
+resp_neu_ids = ["AVAR","AVAL","ASEL","AWAL","wrong_id"]
+resp, labels, confidences, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids,top_n=None)
 
 print(msg)
 # Plot

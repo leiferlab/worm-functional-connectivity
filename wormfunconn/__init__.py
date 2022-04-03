@@ -3,6 +3,8 @@ __all__ = ['integral','integral_py','convolution1','convolution',
 
 __version__ = "0.1.6"
 
+strains = ["wild type", "unc-31"]
+
 from ._integration import integral
 from .integration import integral as integral_py
 from ._convolution import convolution1, convolution
