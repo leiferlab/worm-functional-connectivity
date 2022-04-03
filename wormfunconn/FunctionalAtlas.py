@@ -6,6 +6,8 @@ class FunctionalAtlas:
     
     fname = "functionalatlas.pickle"
     
+    strain = "wild type"
+    
     def __init__(self,neu_ids,params):
         '''Temporary simplified constructor for mock dataset.
         
@@ -21,6 +23,8 @@ class FunctionalAtlas:
         self.params = np.array(params)
         
         self.n_neu = self.neu_ids.shape[0]
+        
+        self.strain = "wild type"
         
     @classmethod
     def from_file(cls,folder,fname=None):
@@ -78,6 +82,12 @@ class FunctionalAtlas:
         pickle_file = open(self.folder+self.fname,"wb")
         pickle.dump(self,pickle_file)
         pickle_file.close()
+        
+    def get_strain(self):
+        try:
+            return self.strain
+        except:
+            return "wild type"
         
     def get_responses(self, stimulus, dt, stim_neu_id, resp_neu_ids=None,
                       threshold=0.0, top_n=None, sort_by_amplitude=True):
@@ -231,7 +241,13 @@ class FunctionalAtlas:
             
             labels = np.array(labels_new)
             
-        return out, labels, msg
+        confidences = self.get_confidences(stim_neu_id,resp_neu_ids)
+        
+        return out, labels, confidences, msg
+        
+    def get_confidences(self,stim_neu_id,resp_neu_ids):
+        # Temporary, for mock dataset
+        return np.ones(len(resp_neu_ids),dtype=float)
         
     def get_scalar_connectivity(self, mode="amplitude", 
         threshold={"amplitude":0.1}, return_all = True, dtype=int):
@@ -447,8 +463,9 @@ class FunctionalAtlas:
         return stim
         
     @staticmethod
-    def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,resp_neu_ids,
-                         top_n=top_n,threshold=threshold):
+    def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,
+                         resp_neu_ids=None,threshold=0.0,top_n=None,
+                         sort_by_amplitude=True):
                          
         if len(resp_neu_ids)==0: resp_neu_ids = None
         
@@ -475,14 +492,15 @@ class FunctionalAtlas:
              "resp_neu_ids = "+str(resp_neu_ids)+"\n"+\
              "top_n = "+str(top_n)+"\n"+\
              "threshold = "+str(threshold)+"\n"+\
-             "resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids, top_n=top_n, threshold=threshold)\n"+\
+             "sort_by_amplitude = "+str(sort_by_amplitude)+"\n"+\
+             "resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids, top_n=top_n, threshold=threshold, sort_by_amplitude=sort_by_amplitude)\n"+\
              "\n"+\
              "print(msg)\n"+\
              "\n"+\
-             "time = np.arange(nt)*dt\n"+
+             "time = np.arange(nt)*dt\n"+\
              "for i in np.arange(resp.shape[0]):\n"+\
-             "\tplt.plot(time,resp[i],label=labels[i])\n"+\
-             "plt.legend()\n"
+             "\tplt.plot(time,resp[i],label=labels[i],,alpha=confidences[i])\n"+\
+             "plt.legend()\n"+\
              "plt.show()"
              
         return sn
