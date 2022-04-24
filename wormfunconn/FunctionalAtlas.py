@@ -154,6 +154,9 @@ class FunctionalAtlas:
             resp_neu_ids_was_None = True
         else:   
             resp_neu_ids_was_None = False
+            # Ignore top_n and place a warning in the message
+            top_n = None
+            msg += "Warning: Top N Responses was ignored because you seleted specific responding neurons."
             # If a single ID was passed, make it a list
             try: 
                 len(resp_neu_ids)
@@ -286,7 +289,10 @@ class FunctionalAtlas:
             out = np.insert(out,0,stimulus,axis=0)
             labels = np.insert(labels,0,stim_neu_id)
             confidences = np.insert(confidences,0,self.get_confidences(sn_i,sn_i))
-            
+        
+        if np.any(confidences!=1.0):
+            msg += "\nThe transparency of the curves is determined by the confidence on the measurement."
+        
         return out, labels, confidences, msg
         
     def get_confidences(self,sn_i,rn_i):
@@ -537,13 +543,13 @@ class FunctionalAtlas:
              "top_n = "+str(top_n)+"\n"+\
              "threshold = "+str(threshold)+"\n"+\
              "sort_by_amplitude = "+str(sort_by_amplitude)+"\n"+\
-             "resp, labels, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids, top_n=top_n, threshold=threshold, sort_by_amplitude=sort_by_amplitude)\n"+\
+             "resp, labels, confidences, msg = funatlas.get_responses(stim, dt, stim_neu_id, resp_neu_ids=resp_neu_ids, top_n=top_n, threshold=threshold, sort_by_amplitude=sort_by_amplitude)\n"+\
              "\n"+\
              "print(msg)\n"+\
              "\n"+\
              "time = np.arange(nt)*dt\n"+\
              "for i in np.arange(resp.shape[0]):\n"+\
-             "\tplt.plot(time,resp[i],label=labels[i],,alpha=confidences[i])\n"+\
+             "\tplt.plot(time,resp[i],label=labels[i],alpha=confidences[i])\n"+\
              "plt.legend()\n"+\
              "plt.show()"
              
