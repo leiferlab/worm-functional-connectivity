@@ -6,9 +6,9 @@ class FunctionalAtlas:
     
     fname = "functionalatlas.pickle"
     
-    strain = "wild type"
+    strain = "wild-type"
     
-    def __init__(self,neu_ids,params):
+    def __init__(self,neu_ids,exponentialconvolutions):
         '''Temporary simplified constructor for mock dataset.
         
         Parameters
@@ -20,11 +20,12 @@ class FunctionalAtlas:
         '''
         
         self.neu_ids = np.array(neu_ids)
-        self.params = np.array(params)
+        self.ec = exponentialconvolutions
+        self.scalar_atlas = None
         
         self.n_neu = self.neu_ids.shape[0]
         
-        self.strain = "wild type"
+        self.strain = "wild-type"
         
     @classmethod
     def from_file(cls,folder,fname=None):
@@ -209,16 +210,19 @@ class FunctionalAtlas:
                            stim_neu_id+") is the "+\
                            "activity set as stimulus. "
                     msg_stim_neuron_included = True
-                elif self.params[rn_i,sn_i] is not None:
+                #elif self.params[rn_i,sn_i] is not None:
+                elif self.ec[rn_i,sn_i] is not None:
                     # If there are parameters for this connection,
                     # compute mock response function
-                    rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
+                    #rf = wfc.exp_conv_2b(t,self.params[rn_i,sn_i])
+                    rf = self.ec[rn_i,sn_i].eval(t)
                     
                     # Convolve with stimulus
                     out.append(wfc.convolution(rf,stimulus,dt,8))
                 else:
                     # If we don't have data for this connection, don't pass
                     # anything. Passing nans messes with the sorting.
+                    print(i)
                     no_data_for.append(i)
                     labels.pop(-1)
                     #out[i] = np.nan
@@ -235,9 +239,9 @@ class FunctionalAtlas:
         
         # Compile a message listing the neurons for which there is no data.
         if len(no_data_for)>0:
-            msg += "These neurons are not in the dataset: "
+            msg += "There is no data for the connection from "+stim_neu_id+" to: "
             for ndf in no_data_for:
-                msg += self.neu_ids[i]+","
+                msg += self.neu_ids[ndf]+","
             # Replace the last comma with period.
             msg = msg[:-1]
             msg += ". "
@@ -329,8 +333,13 @@ class FunctionalAtlas:
             multistable, functionally variable). Empty for non-connected edges.
         '''
         
-        folder = os.path.join(os.path.dirname(__file__), "../atlas/")
-        i_map = np.loadtxt(folder+"funatlas_intensity_map.txt")
+        #folder = os.path.join(os.path.dirname(__file__), "../atlas/")
+        #i_map = np.loadtxt(folder+"funatlas_intensity_map.txt")
+        
+        if self.scalar_atlas is not None:
+            i_map = self.scalar_atlas
+        else:
+            raise ValueError("Scalar atlas is not set")
         
         i_map[np.isnan(i_map)] = 0
         i_map[np.isinf(i_map)] = 0
