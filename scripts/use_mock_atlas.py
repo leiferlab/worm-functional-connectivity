@@ -7,7 +7,7 @@ import os
 folder = os.path.join(os.path.dirname(__file__),"../atlas/")
 
 # Create FunctionalAtlas instance from file
-funatlas = wfc.FunctionalAtlas.from_file(folder,"wild-type")
+funatlas = wfc.FunctionalAtlas.from_file(folder,fname="wild-type")
 #funatlas = wfc.FunctionalAtlas.from_file(folder,"unc-31")
 
 print("Available strains", wfc.strains)

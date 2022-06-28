@@ -3,7 +3,7 @@ import numpy as np
 class ExponentialConvolution_min:
     
     def __init__(self,exp):
-        self.exp = [[exp]]
+        self.exp = [exp]
             
     def eval(self,x,dtype=np.float64):
         '''Evaluates the ExponentialConvolution in the time domain.

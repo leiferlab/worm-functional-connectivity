@@ -49,7 +49,7 @@ class FunctionalAtlas:
             fname = cls.fname
         else: 
             if fname.split(".")[-1] != "pickle": fname += ".pickle"
-        
+            
         if os.path.isfile(folder+fname):
             f = open(folder+fname,"rb")
             inst = pickle.load(f)
@@ -222,7 +222,6 @@ class FunctionalAtlas:
                 else:
                     # If we don't have data for this connection, don't pass
                     # anything. Passing nans messes with the sorting.
-                    print(i)
                     no_data_for.append(i)
                     labels.pop(-1)
                     #out[i] = np.nan
