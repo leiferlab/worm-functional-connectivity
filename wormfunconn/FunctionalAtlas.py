@@ -505,12 +505,11 @@ class FunctionalAtlas:
         '''Realistic stimulus, i.e. a convolution of two exponentials.
         '''
         t = np.arange(nt)*dt
-        ec = wfc.ExponentialConvolution([1./tau1,1./tau2])
-        stim = ec.eval(t)
+        if tau1 == tau2:
+            stim = (2./tau1)*t*np.exp(-t/tau1)
+        else:
+            stim = -(np.exp(-t/tau1)-np.exp(-t/tau2))/(1./tau1-1./tau2)*1./tau1*1./tau2
         
-        #p = 1,1/tau1,1/tau2-1/tau1
-        #stim = wfc.exp_conv_2b(t,p)
-
         return stim
         
     @staticmethod
