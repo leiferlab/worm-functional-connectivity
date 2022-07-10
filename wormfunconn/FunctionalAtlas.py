@@ -88,11 +88,31 @@ class FunctionalAtlas:
         try:
             return self.strain
         except:
-            return "wild type"
+            return "wild-type"
             
-    def get_neuron_ids(self):
+    def get_neuron_ids(self,stim=False):
         try:
-            return self.neuron_ids
+            if stim:
+                ids = []
+                n_ids = len(self.neu_ids)
+                for j in np.arange(n_ids):
+                    any_stim = False
+                    for i in np.arange(n_ids):
+                        if self.ec[i,j] is not None:
+                            any_stim = True
+                    if any_stim:
+                        ids.append(self.neu_ids[j])
+            else:
+                ids = []
+                n_ids = len(self.neu_ids)
+                for i in np.arange(n_ids):
+                    any_resp = False
+                    for j in np.arange(n_ids):
+                        if self.ec[i,j] is not None:
+                            any_resp = True
+                    if any_resp:
+                        ids.append(self.neu_ids[i])
+            return ids
         except:
             folder = os.path.dirname(__file__)
             f = open(folder+"/aconnectome_ids.txt","r")
@@ -233,7 +253,7 @@ class FunctionalAtlas:
                 msg += "'"+rn_id+"' is not a neuron. "
         
         out = np.array(out)        
-        labels = np.array(labels)
+        labels = np.array(labels,dtype="<U10")
         confidences = np.array(confidences)
         
         # Compile a message listing the neurons for which there is no data.
@@ -247,13 +267,13 @@ class FunctionalAtlas:
         
         # If either top_n or the threshold must be used, select from the array
         # of all the responses that was created above.
-        if resp_neu_ids_was_None and top_n is not None:
+        if resp_neu_ids_was_None and top_n is not None and len(out)>0:
             # Select the top_n responses in terms of max(abs())
             outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
-            out = out[outsort[:top_n+1]]
-            labels = labels[outsort[:top_n+1]]
-            confidences = confidences[outsort[:top_n+1]]
-        elif resp_neu_ids_was_None and top_n is None:
+            out = out[outsort[:top_n]]
+            labels = labels[outsort[:top_n]]
+            confidences = confidences[outsort[:top_n]]
+        elif resp_neu_ids_was_None and top_n is None and len(out)>0:
             # Select the responses that pass the threshold.
             outselect = np.where(np.max(np.abs(out),axis=-1)>=threshold)[0]
             out = out[outselect]
@@ -264,7 +284,7 @@ class FunctionalAtlas:
             
         # Sort the responses by amplitude. Not strictly needed if top_n is 
         # not None (because out has been sorted above), but whatever.
-        if sort_by_amplitude:
+        if sort_by_amplitude and len(out)>0:
             outsort = np.argsort(np.max(np.abs(out),axis=-1))[::-1]
             out = out[outsort]
             labels = labels[outsort]
@@ -290,6 +310,8 @@ class FunctionalAtlas:
                                "activity set as stimulus. "
             
             out = np.insert(out,0,stimulus,axis=0)
+            if len(out.shape)==1:
+                out = np.array([out])
             labels = np.insert(labels,0,stim_neu_id)
             confidences = np.insert(confidences,0,self.get_confidences(sn_i,sn_i))
         
@@ -522,7 +544,7 @@ class FunctionalAtlas:
     @staticmethod
     def get_code_snippet(nt,dt,stim_type,stim_kwargs,stim_neu_id,
                          resp_neu_ids=None,threshold=0.0,top_n=None,
-                         sort_by_amplitude=True):
+                         sort_by_amplitude=True,strain="wild-type"):
                          
         if len(resp_neu_ids)==0: resp_neu_ids = None
         
@@ -535,7 +557,7 @@ class FunctionalAtlas:
              "folder = os.path.join(os.path.dirname(__file__),\"../atlas/\")\n"+\
              "\n"+\
              "# Create FunctionalAtlas instance from file\n"+\
-             "funatlas = wfc.FunctionalAtlas.from_file(folder,\"mock\")\n"+\
+             "funatlas = wfc.FunctionalAtlas.from_file(folder,\""+strain+"\")\n"+\
              "\n"+\
              "# Set time-axis properties\n"+\
              "nt = 1000\n"+\
