@@ -1,5 +1,3 @@
 website_text = {}
 
-website_text["intro"] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Fermentum leo vel orci porta non pulvinar. Viverra tellus in hac habitasse platea. Et tortor at risus viverra adipiscing at in tellus integer. Sed vulputate mi sit amet. Congue quisque egestas diam in arcu cursus euismod quis viverra. Urna molestie at elementum eu."
-
-
+website_text["intro"] = "This web-app allows you to simulate responses of downstream neurons to the stimulation of other neurons using the functional connectivity data measured by Randi et al. (2022). <br> To start, select a neuron to be stimulated and the activity that you want to be induced in that neuron (irrespectively of the method of stimulation). The \"realistic\" activity type is an empirical representative activity transient following a stimulus, whose shape and duration can be tuned with the two timescales. <br> Then select either the neurons whose responses you'd like to plot or the top n most responsive neurons. <br> This web-app is an interface to the <a hfref=\"https://www.github.com/leiferlab/worm-functional-connectivity\">Worm Functional Connectivity</a> python library that is available on Github. At the bottom of the plot, you can obtain the code snippet to replicate the plot on your computer."
