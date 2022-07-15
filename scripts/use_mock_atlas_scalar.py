@@ -51,7 +51,9 @@ def use_mock_atlas_scalar(
         with open(pairwise_output, "w") as pairwise_file:
             for (xidx, xlab) in enumerate(funatlas.neu_ids):
                 for (yidx, ylab) in enumerate(funatlas.neu_ids):
-                    pairwise_file.write(f"{xlab}\t{ylab}\t{s_fconn[xidx,yidx]}\n")
+                    # s_fconn is [from,to], because of it's use in equations like
+                    # activity_i = fconn[i,j] * activity_j
+                    pairwise_file.write(f"{xlab}\t{ylab}\t{s_fconn[yidx,xidx]}\n")
 
 
 def main():
