@@ -258,12 +258,7 @@ class FunctionalAtlas:
         
         # Compile a message listing the neurons for which there is no data.
         if len(no_data_for)>0:
-            msg += "There is no data for the connection from "+stim_neu_id+" to: "
-            for ndf in no_data_for:
-                msg += self.neu_ids[ndf]+","
-            # Replace the last comma with period.
-            msg = msg[:-1]
-            msg += ". "
+            msg += "Some connections are missing because we don't have data for them."
         
         # If either top_n or the threshold must be used, select from the array
         # of all the responses that was created above.
