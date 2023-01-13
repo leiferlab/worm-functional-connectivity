@@ -46,7 +46,7 @@ gregory_omega = np.array([
               7.02145337301587301590e-01,
               1.07249696869488536160e+00,
               9.92107445987654320990e-01])
-    ])
+    ], dtype=object)
     
 def integral(Y, dx=1., k=8):
     '''Computes the integral of Y sampled on equispaced abscissas, using the 
