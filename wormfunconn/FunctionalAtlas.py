@@ -258,7 +258,7 @@ class FunctionalAtlas:
         
         # Compile a message listing the neurons for which there is no data.
         if len(no_data_for)>0:
-            msg += "Some connections are missing because we don't have data for them."
+            msg += "Some connections are missing because we don't have empirical measurements for them."
         
         # If either top_n or the threshold must be used, select from the array
         # of all the responses that was created above.
