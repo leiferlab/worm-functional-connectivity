@@ -554,6 +554,8 @@ class FunctionalAtlas:
              "# Create FunctionalAtlas instance from file\n"+\
              "funatlas = wfc.FunctionalAtlas.from_file(folder,\""+strain+"\")\n"+\
              "\n"+\
+             "strain = funatlas.get_strain()\n"+\
+             "\n"+\
              "# Set time-axis properties\n"+\
              "nt = 1000\n"+\
              "t_max = 100.0\n"+\
