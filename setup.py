@@ -69,7 +69,7 @@ setup(
     package_data={"wormfunconn": ["aconnectome_ids.txt"]},
     entry_points={
         "console_scripts": [
-            "use_mock_atlas_scalar=scripts.use_mock_atlas_scalar:main",
+            "export_atlas_scalar=scripts.export_atlas_scalar:main",
         ]
     },
 )

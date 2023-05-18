@@ -35,36 +35,36 @@ Author: Francesco Randi francesco.randi@gmail.com
 
 ### Command line utilities
 
-* `use_mock_atlas_scalar` - Uses the mock functional atlas stored in
-  `atlas/mock.pickle` to generate a scalar version of the functional
-   connectivity matrix.
+* `export_atlas_scalar` - Export a scalar version of a functional connectivity
+  matrix stored in `atlas/`.
 
 ```bash
-usage: use_mock_atlas_scalar [-h] [--mode MODE]
-                             [--amplitude-threshold THRESHOLD]
-                             [--matrix-output FILE] [--pairwise-output FILE]
-                             [-p] [-v]
+usage: export_atlas_scalar [-h] [--mode MODE]
+                           [--amplitude-threshold THRESHOLD]
+                           [--matrix-output FILE] [--pairwise-output FILE]
+                           [-p] [-v] [--version] [--atlas ATLAS]
 
-Use the mock atlas and return a scalar version of the functional connectivity
-matrix (amplitude, timescales, or other)
+Given an atlas (in ../atlas), return a scalar version of the functional
+connectivity matrix (amplitude, timescales, or other)
 
 optional arguments:
   -h, --help            show this help message and exit
   --mode MODE           Type of scalar quantity to extract from functional
                         connectivity. Can be amplitude or timescales.
   --amplitude-threshold THRESHOLD
-                        Amplitude values below the threshold will be set to
-                        zero.
+                        Amplitude values below the threshold will be set to zero.
   --matrix-output FILE  Save the matrix to a tab delimited file
   --pairwise-output FILE
                         Save the matrix with one line per neuron pair in a tab
                         delimited file
   -p, --show-plot       Plot output
   -v, --verbose         increase output verbosity
+  --version             show program's version number and exit
+  --atlas ATLAS         Which atlas to export (must be in ../atlas).
+                        Choices are: wild-type, unc-31, or mock
 
 As an alternative to the commandline, params can be placed in a file, one per
-line, and specified on the commandline like 'use_mock_atlas_scalar
-@params.conf'.
+line, and specified on the commandline like 'export_atlas_scalar @params.conf'.
 ```
 
 ### Example scripts
