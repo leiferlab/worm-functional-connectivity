@@ -70,6 +70,7 @@ def main():
             "commandline like '%(prog)s @params.conf'."
         ),
         fromfile_prefix_chars="@",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
