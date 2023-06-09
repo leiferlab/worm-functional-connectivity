@@ -54,7 +54,7 @@ optional arguments:
                         amplitude)
   --amplitude-threshold THRESHOLD
                         Amplitude values below the threshold will be set to zero.
-                        (default: 0.1)
+                        (default: 0.0)
   --matrix-output FILE  Save the matrix to a tab delimited file (default: NONE)
   --pairwise-output FILE
                         Save the matrix with one line per neuron pair in a tab

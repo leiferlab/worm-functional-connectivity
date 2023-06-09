@@ -87,7 +87,7 @@ def main():
         "--amplitude-threshold",
         help=("Amplitude values below the threshold will be set to zero."),
         type=float,
-        default=0.1,
+        default=0.0,
         metavar="THRESHOLD",
     )
     parser.add_argument(
