@@ -70,6 +70,7 @@ def main():
             "commandline like '%(prog)s @params.conf'."
         ),
         fromfile_prefix_chars="@",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
@@ -86,7 +87,7 @@ def main():
         "--amplitude-threshold",
         help=("Amplitude values below the threshold will be set to zero."),
         type=float,
-        default=0.1,
+        default=0.0,
         metavar="THRESHOLD",
     )
     parser.add_argument(
